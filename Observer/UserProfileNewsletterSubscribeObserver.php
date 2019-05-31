@@ -27,12 +27,13 @@ class UserProfileNewsletterSubscribeObserver implements ObserverInterface
 
         $subscriber = $observer->getDataObject();
 
-        if (!$subscriber->isStatusChanged()) return;
+        // Status changed isn't picked up from the admin unsubscribe of a guest user
+        if (!$subscriber->isStatusChanged() && $subscriber->getCustomerId()) return;
 
-        try {
+        if ($subscriber->getCustomerId()) {
             $customer = $this->customer_repository_interface->getById($subscriber->getCustomerId());
             $this->handleActionForCustomer($subscriber, $customer);
-        } catch (NoSuchEntityException $ex) {
+        } else {
             $this->handleActionForSubscriber($subscriber);
         }
     }
@@ -46,7 +47,6 @@ class UserProfileNewsletterSubscribeObserver implements ObserverInterface
                 $customer->getLastname()
             );
         } else {
-            $this->data_helper->unsubscribeEmailFromKlaviyoList($customer->getEmail());
             $this->data_helper->unsubscribeEmailFromKlaviyoList($customer->getEmail());
         }
     }
